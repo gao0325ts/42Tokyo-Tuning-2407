@@ -85,13 +85,13 @@ impl Graph {
             if state.id == to_node_id {
                 return state.priority;
             }
-            if let Some(val) = is_confirmed.get(state.id) {
+            if let Some(val) = is_confirmed.get(&state.id) {
                 continue;
             }
             is_confirmed.insert(state.id, true);
-            if let Some(edges) = self.edges.get(state.id) {
+            if let Some(edges) = self.edges.get(&state.id) {
                 for edge in edges {
-                    if let Some(val) = is_confirmed.get(edge.node_b_id) {
+                    if let Some(val) = is_confirmed.get(&edge.node_b_id) {
                     } else {
                         distances.push(State {id: edge.node_b_id, priority: state.priority + edge.weight});
                     }
