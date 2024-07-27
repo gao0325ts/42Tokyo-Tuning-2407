@@ -1,5 +1,6 @@
 use sqlx::FromRow;
 use std::collections::HashMap;
+use std::{cmp::Ordering, collections::BinaryHeap};
 
 #[derive(FromRow, Clone, Debug)]
 pub struct Node {
@@ -13,6 +14,30 @@ pub struct Edge {
     pub node_a_id: i32,
     pub node_b_id: i32,
     pub weight: i32,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct State<T> {
+    pub id: usize,
+    pub priority: T,
+}
+
+impl<T> Ord for State<T>
+where
+    T: Ord,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.priority.cmp(&other.priority).reverse()
+    }
+}
+
+impl<T> PartialOrd for State<T>
+where
+    T: Ord,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 #[derive(Debug)]
@@ -51,26 +76,20 @@ impl Graph {
     }
 
     pub fn shortest_path(&self, from_node_id: i32, to_node_id: i32) -> i32 {
-        let mut distances = HashMap::new();
-        distances.insert(from_node_id, 0);
+        let mut distances = BinaryHeap::new();
+        distances.push(State {id: from_node_id, priority: 0});
+        let mut is_confirmed: [bool; self.nodes.len()] = [false; self.nodes.len()];
 
-        for _ in 0..self.nodes.len() {
-            for node_id in self.nodes.keys() {
-                if let Some(edges) = self.edges.get(node_id) {
-                    for edge in edges {
-                        let new_distance = distances
-                            .get(node_id)
-                            .and_then(|d: &i32| d.checked_add(edge.weight))
-                            .unwrap_or(i32::MAX);
-                        let current_distance = distances.get(&edge.node_b_id).unwrap_or(&i32::MAX);
-                        if new_distance < *current_distance {
-                            distances.insert(edge.node_b_id, new_distance);
-                        }
-                    }
+        while !distances.is_empty() {
+            let state = distances.pop();
+            if state.id == to_node_id {
+                return state.priority;
+            }
+            if let Some(edges) = self.edges.get(state.id) {
+                for edge in edges {
+                    distances.push(State {id: edge.node_b_id, priority: state.priority + edge.weight});
                 }
             }
         }
-
-        distances.get(&to_node_id).cloned().unwrap_or(i32::MAX)
     }
 }
