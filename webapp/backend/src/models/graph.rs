@@ -79,7 +79,6 @@ impl Graph {
         let mut distances = BinaryHeap::new();
         distances.push(State {id: from_node_id, priority: 0});
         let mut is_confirmed = HashMap::new();
-        is_confirmed.insert(from_node_id, true);
 
         while let Some(state) = distances.pop() {
             if state.id == to_node_id {
