@@ -81,13 +81,12 @@ impl Graph {
         let mut is_confirmed = HashMap::new();
         is_confirmed.insert(from_node_id, true);
 
-        while !distances.is_empty() {
-            let state = distances.pop();
-            if let Some(val) = is_confirmed.get(state.id) {
-                continue;
-            }
+        while let Some(state) = distances.pop() {
             if state.id == to_node_id {
                 return state.priority;
+            }
+            if let Some(val) = is_confirmed.get(state.id) {
+                continue;
             }
             is_confirmed.insert(state.id, true);
             if let Some(edges) = self.edges.get(state.id) {
@@ -99,6 +98,6 @@ impl Graph {
                 }
             }
         }
-        0
+        -1
     }
 }
