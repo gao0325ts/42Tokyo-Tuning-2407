@@ -18,7 +18,7 @@ pub struct Edge {
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct State<T> {
-    pub id: usize,
+    pub id: i32,
     pub priority: T,
 }
 
@@ -78,18 +78,27 @@ impl Graph {
     pub fn shortest_path(&self, from_node_id: i32, to_node_id: i32) -> i32 {
         let mut distances = BinaryHeap::new();
         distances.push(State {id: from_node_id, priority: 0});
-        let mut is_confirmed: [bool; self.nodes.len()] = [false; self.nodes.len()];
+        let mut is_confirmed = HashMap::new();
+        is_confirmed.insert(from_node_id, true);
 
         while !distances.is_empty() {
             let state = distances.pop();
+            if let Some(val) = is_confirmed.get(state.id) {
+                continue;
+            }
             if state.id == to_node_id {
                 return state.priority;
             }
+            is_confirmed.insert(state.id, true);
             if let Some(edges) = self.edges.get(state.id) {
                 for edge in edges {
-                    distances.push(State {id: edge.node_b_id, priority: state.priority + edge.weight});
+                    if let Some(val) = is_confirmed.get(edge.node_b_id) {
+                    } else {
+                        distances.push(State {id: edge.node_b_id, priority: state.priority + edge.weight});
+                    }
                 }
             }
         }
+        0
     }
 }
